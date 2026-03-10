@@ -344,6 +344,31 @@
   color: #fff;
 }
 
+.category-select {
+  appearance: none;
+  border: none;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.category-select:hover {
+  opacity: 0.88;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.category-select option {
+  background: #2a2f45;
+  color: #e8eaf6;
+  font-weight: 500;
+}
+
+
 .amount-cell {
   font-weight: 600;
 }

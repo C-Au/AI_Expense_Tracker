@@ -13,7 +13,9 @@ const CATEGORY_COLORS = {
   Other:            '#adb5bd',
 };
 
-export default function ExpenseTable({ expenses, onDelete }) {
+const CATEGORIES = Object.keys(CATEGORY_COLORS);
+
+export default function ExpenseTable({ expenses, onDelete, onCategoryChange }) {
   const [sortField, setSortField] = useState('date');
   const [sortDir, setSortDir] = useState('desc');
 
@@ -78,12 +80,16 @@ export default function ExpenseTable({ expenses, onDelete }) {
                 ${Number(exp.amount).toFixed(2)}
               </td>
               <td>
-                <span
-                  className="category-badge"
+                <select
+                  className="category-select"
+                  value={exp.category}
                   style={{ background: CATEGORY_COLORS[exp.category] || '#adb5bd' }}
+                  onChange={(e) => onCategoryChange(exp._id, e.target.value)}
                 >
-                  {exp.category}
-                </span>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </td>
               <td>
                 <button className="delete-btn" onClick={() => onDelete(exp._id)}>

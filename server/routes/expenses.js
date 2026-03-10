@@ -96,6 +96,28 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// PATCH /api/expenses/:id — update category
+router.patch('/:id', async (req, res) => {
+  try {
+    const { category } = req.body;
+    if (!category) {
+      return res.status(400).json({ error: 'category is required' });
+    }
+    const updated = await Expense.findByIdAndUpdate(
+      req.params.id,
+      { $set: { category } },
+      { new: true, runValidators: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error('Update category error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/expenses/:id
 router.delete('/:id', async (req, res) => {
   try {

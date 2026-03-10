@@ -57,6 +57,16 @@ export default function App() {
     setError(null);
   };
 
+  const handleCategoryChange = async (id, newCategory) => {
+    try {
+      const res = await axios.patch(`/api/expenses/${id}`, { category: newCategory });
+      setExpenses((prev) => prev.map((e) => (e._id === id ? res.data : e)));
+      fetchCategories();
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+    }
+  };
+
   const handleDelete = async (id) => {
     try {
       await axios.delete(`/api/expenses/${id}`);
@@ -80,7 +90,7 @@ export default function App() {
   return (
     <div className={`app${darkMode ? ' dark' : ''}`}>
       <header className="app-header">
-        <h1 className="app-title">AI Expense Tracker</h1>
+        <h1 className="app-title">Simple Books AI Expense Tracker</h1>
         <p className="app-subtitle">
           Upload a CSV — AI will categorize your expenses automatically
         </p>
@@ -120,6 +130,7 @@ export default function App() {
           <ExpenseTable
             expenses={filteredExpenses}
             onDelete={handleDelete}
+            onCategoryChange={handleCategoryChange}
             darkMode={darkMode}
           />
         </div>
