@@ -6,6 +6,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { getAllCategoryColors } from '../utils/categoryColors';
 
 const CATEGORY_COLORS = {
   'Food & Dining':  '#ff6b6b',
@@ -34,7 +35,8 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function CategoryChart({ data, onSegmentClick, activeCategory, darkMode = false }) {
+export default function CategoryChart({ data, onSegmentClick, activeCategory, darkMode = false, categoryColors = {} }) {
+  const colors = Object.keys(categoryColors).length > 0 ? categoryColors : CATEGORY_COLORS;
   if (!data || data.length === 0) {
     return (
       <div className="card chart-card">
@@ -66,7 +68,7 @@ export default function CategoryChart({ data, onSegmentClick, activeCategory, da
             {chartData.map((entry) => (
               <Cell
                 key={entry.name}
-                fill={CATEGORY_COLORS[entry.name] || '#adb5bd'}
+                fill={colors[entry.name] || '#adb5bd'}
                 opacity={
                   activeCategory === 'All' || activeCategory === entry.name ? 1 : 0.4
                 }

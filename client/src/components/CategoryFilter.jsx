@@ -1,3 +1,5 @@
+import { getAllCategoryColors } from '../utils/categoryColors';
+
 const CATEGORY_COLORS = {
   'Food & Dining':  '#ff6b6b',
   Transport:        '#ffa94d',
@@ -12,13 +14,14 @@ const CATEGORY_COLORS = {
   All:              '#4a6cf7',
 };
 
-export default function CategoryFilter({ categories, selected, onChange }) {
+export default function CategoryFilter({ categories, selected, onChange, categoryColors = {} }) {
+  const colors = Object.keys(categoryColors).length > 0 ? categoryColors : CATEGORY_COLORS;
   return (
     <div className="filter-bar">
       <span className="filter-label">Filter:</span>
       {categories.map((cat) => {
         const isActive = cat === selected;
-        const color = CATEGORY_COLORS[cat] || '#4a6cf7';
+        const color = colors[cat] || '#4a6cf7';
         return (
           <button
             key={cat}

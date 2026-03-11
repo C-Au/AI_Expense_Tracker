@@ -18,18 +18,6 @@ const expenseSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: [
-        'Food & Dining',
-        'Transport',
-        'Housing',
-        'Utilities',
-        'Healthcare',
-        'Entertainment',
-        'Shopping',
-        'Travel',
-        'Education',
-        'Other',
-      ],
       default: 'Other',
     },
     uploadBatch: {

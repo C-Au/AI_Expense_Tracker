@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const Expense = require('../models/Expense');
+const CustomCategory = require('../models/CustomCategory');
 const { parseCSV } = require('../services/csvParser');
 const { categorizeExpenses } = require('../services/aiCategorizer');
 
@@ -155,6 +156,56 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: 'Deleted successfully', id: req.params.id });
   } catch (err) {
     console.error('Delete error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================
+// Custom Categories Routes
+// ============================================
+
+// GET /api/custom-categories
+router.get('/custom-categories', async (req, res) => {
+  try {
+    const customCats = await CustomCategory.find().sort({ name: 1 });
+    res.json(customCats);
+  } catch (err) {
+    console.error('Fetch custom categories error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/custom-categories
+router.post('/custom-categories', async (req, res) => {
+  try {
+    const { name, color } = req.body;
+    if (!name || !color) {
+      return res.status(400).json({ error: 'name and color are required' });
+    }
+
+    const customCat = new CustomCategory({ name, color });
+    const saved = await customCat.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'Category already exists' });
+    }
+    console.error('Create custom category error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/custom-categories/:name
+router.delete('/custom-categories/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const deleted = await CustomCategory.findOneAndDelete({ name });
+    if (!deleted) {
+      return res.status(404).json({ error: 'Custom category not found' });
+    }
+    res.json({ message: 'Custom category deleted', name });
+  } catch (err) {
+    console.error('Delete custom category error:', err);
     res.status(500).json({ error: err.message });
   }
 });

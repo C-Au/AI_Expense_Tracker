@@ -5,6 +5,8 @@ import ExpenseTable from './components/ExpenseTable';
 import CategoryFilter from './components/CategoryFilter';
 import CategoryChart from './components/CategoryChart';
 import Bookshelf from './components/Bookshelf';
+import CreateCategoryModal from './components/CreateCategoryModal';
+import { getAllCategoryColors } from './utils/categoryColors';
 import './styles/app.css';
 
 export default function App() {
@@ -17,6 +19,8 @@ export default function App() {
     () => localStorage.getItem('darkMode') === 'true'
   );
   const [batches, setBatches] = useState([]);
+  const [customCategories, setCustomCategories] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const toggleDark = () => {
     setDarkMode((prev) => {
@@ -54,6 +58,15 @@ export default function App() {
     }
   }, []);
 
+  const fetchCustomCategories = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/expenses/custom-categories');
+      setCustomCategories(res.data);
+    } catch (err) {
+      console.error('Failed to fetch custom categories:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchExpenses(selectedCategory);
   }, [selectedCategory, fetchExpenses]);
@@ -65,6 +78,14 @@ export default function App() {
   useEffect(() => {
     fetchBatches();
   }, [fetchBatches]);
+
+  useEffect(() => {
+    fetchCustomCategories();
+  }, [fetchCustomCategories]);
+
+  useEffect(() => {
+    fetchCustomCategories();
+  }, [fetchCustomCategories]);
 
   const handleUploadSuccess = (newExpenses) => {
     setExpenses((prev) => [...newExpenses, ...prev]);
@@ -97,6 +118,7 @@ export default function App() {
     setSelectedCategory(category === selectedCategory ? 'All' : category);
   };
 
+  const categoryColors = getAllCategoryColors(customCategories);
   const categories = ['All', ...categoryTotals.map((c) => c.category)];
   const filteredExpenses =
     selectedCategory === 'All'
@@ -106,13 +128,13 @@ export default function App() {
   return (
     <div className={`app${darkMode ? ' dark' : ''}`}>
       <header className="app-header">
+        <button className="toggle-btn toggle-btn--corner" onClick={toggleDark}>
+          {darkMode ? '☀️ Light' : '🌙 Dark'}
+        </button>
         <h1 className="app-title">Simple Books AI Expense Tracker</h1>
         <p className="app-subtitle">
           Upload a CSV — AI will categorize your expenses automatically
         </p>
-        <button className="toggle-btn" onClick={toggleDark}>
-          {darkMode ? '☀️ Light' : '🌙 Dark'}
-        </button>
       </header>
 
       {error && <div className="error-banner">Error: {error}</div>}
@@ -123,6 +145,7 @@ export default function App() {
         loading={loading}
         setLoading={setLoading}
         darkMode={darkMode}
+        onNewCategory={() => setModalOpen(true)}
       />
 
       <Bookshelf batches={batches} />
@@ -135,6 +158,7 @@ export default function App() {
               selected={selectedCategory}
               onChange={setSelectedCategory}
               darkMode={darkMode}
+              categoryColors={categoryColors}
             />
           </div>
 
@@ -143,6 +167,7 @@ export default function App() {
             onSegmentClick={handleCategoryClick}
             activeCategory={selectedCategory}
             darkMode={darkMode}
+            categoryColors={categoryColors}
           />
 
           <ExpenseTable
@@ -150,9 +175,16 @@ export default function App() {
             onDelete={handleDelete}
             onCategoryChange={handleCategoryChange}
             darkMode={darkMode}
+            categoryColors={categoryColors}
           />
         </div>
       )}
+
+      <CreateCategoryModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={fetchCustomCategories}
+      />
     </div>
   );
 }

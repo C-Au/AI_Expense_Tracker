@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 
-export default function FileUpload({ onUploadSuccess, onError, loading, setLoading }) {
+export default function FileUpload({ onUploadSuccess, onError, loading, setLoading, onNewCategory }) {
   const [file, setFile] = useState(null);
 
   const onDrop = useCallback((accepted) => {
@@ -51,7 +51,7 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
 
       {file && <div className="file-name">📄 {file.name}</div>}
 
-      <div>
+      <div className="upload-actions">
         <button
           className="upload-btn"
           onClick={handleUpload}
@@ -59,6 +59,9 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
         >
           {loading && <span className="spinner" />}
           {loading ? 'Categorizing with AI…' : 'Upload & Categorize'}
+        </button>
+        <button className="new-category-btn" onClick={onNewCategory}>
+          ➕ New Category
         </button>
       </div>
     </div>

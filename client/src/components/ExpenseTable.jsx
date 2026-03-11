@@ -1,23 +1,11 @@
 import { useState } from 'react';
+import { getAllCategoryColors } from '../utils/categoryColors';
 
-const CATEGORY_COLORS = {
-  'Food & Dining':  '#ff6b6b',
-  Transport:        '#ffa94d',
-  Housing:          '#51cf66',
-  Utilities:        '#339af0',
-  Healthcare:       '#cc5de8',
-  Entertainment:    '#f06595',
-  Shopping:         '#ffd43b',
-  Travel:           '#20c997',
-  Education:        '#748ffc',
-  Other:            '#adb5bd',
-};
-
-const CATEGORIES = Object.keys(CATEGORY_COLORS);
-
-export default function ExpenseTable({ expenses, onDelete, onCategoryChange }) {
+export default function ExpenseTable({ expenses, onDelete, onCategoryChange, categoryColors = {} }) {
   const [sortField, setSortField] = useState('date');
   const [sortDir, setSortDir] = useState('desc');
+  const colors = Object.keys(categoryColors).length > 0 ? categoryColors : getAllCategoryColors();
+  const CATEGORIES = Object.keys(colors).filter((cat) => cat !== 'All').sort();
 
   const toggleSort = (field) => {
     if (sortField === field) {
@@ -83,7 +71,7 @@ export default function ExpenseTable({ expenses, onDelete, onCategoryChange }) {
                 <select
                   className="category-select"
                   value={exp.category}
-                  style={{ background: CATEGORY_COLORS[exp.category] || '#adb5bd' }}
+                  style={{ background: colors[exp.category] || '#adb5bd' }}
                   onChange={(e) => onCategoryChange(exp._id, e.target.value)}
                 >
                   {CATEGORIES.map((cat) => (
