@@ -4,6 +4,7 @@ import FileUpload from './components/FileUpload';
 import ExpenseTable from './components/ExpenseTable';
 import CategoryFilter from './components/CategoryFilter';
 import CategoryChart from './components/CategoryChart';
+import Bookshelf from './components/Bookshelf';
 import './styles/app.css';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(
     () => localStorage.getItem('darkMode') === 'true'
   );
+  const [batches, setBatches] = useState([]);
 
   const toggleDark = () => {
     setDarkMode((prev) => {
@@ -43,6 +45,15 @@ export default function App() {
     }
   }, []);
 
+  const fetchBatches = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/expenses/batches');
+      setBatches(res.data);
+    } catch (err) {
+      console.error('Failed to fetch upload batches:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchExpenses(selectedCategory);
   }, [selectedCategory, fetchExpenses]);
@@ -51,9 +62,14 @@ export default function App() {
     fetchCategories();
   }, [expenses, fetchCategories]);
 
+  useEffect(() => {
+    fetchBatches();
+  }, [fetchBatches]);
+
   const handleUploadSuccess = (newExpenses) => {
     setExpenses((prev) => [...newExpenses, ...prev]);
     fetchCategories();
+    fetchBatches();
     setError(null);
   };
 
@@ -108,6 +124,8 @@ export default function App() {
         setLoading={setLoading}
         darkMode={darkMode}
       />
+
+      <Bookshelf batches={batches} />
 
       {expenses.length > 0 && (
         <div className="expense-grid">

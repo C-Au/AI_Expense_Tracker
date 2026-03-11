@@ -96,6 +96,33 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// GET /api/expenses/batches — list all upload batches, oldest-first
+router.get('/batches', async (req, res) => {
+  try {
+    const batches = await Expense.aggregate([
+      {
+        $group: {
+          _id: '$uploadBatch',
+          date: { $first: '$date' },
+          count: { $sum: 1 },
+          createdAt: { $min: '$createdAt' },
+        },
+      },
+      { $sort: { createdAt: 1 } },
+    ]);
+    res.json(
+      batches.map((b) => ({
+        uploadBatch: b._id,
+        date: b.date,
+        count: b.count,
+      }))
+    );
+  } catch (err) {
+    console.error('Batches error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // PATCH /api/expenses/:id — update category
 router.patch('/:id', async (req, res) => {
   try {

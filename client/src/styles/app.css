@@ -382,3 +382,127 @@
   cursor: pointer;
   font-size: 0.8rem;
 }
+
+/* ============================================
+   Bookshelf
+   ============================================ */
+.bookshelf-wrap {
+  margin-bottom: 24px;
+}
+
+.bookshelf-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--filter-label-color);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.bookshelf {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 16px 20px 26px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  overflow-x: auto;
+  min-height: 118px;
+}
+
+.shelf-plank {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(
+    to bottom,
+    #c8a97a 0%,
+    #a8845a 45%,
+    #8a6a44 100%
+  );
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.18), inset 0 2px 4px rgba(255, 255, 255, 0.12);
+}
+
+.book {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px 2px 0 0;
+  cursor: default;
+  position: relative;
+  transform-origin: bottom center;
+  transform: rotate(var(--book-tilt, 0deg));
+  /* worn texture via layered gradient */
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(255, 255, 255, 0.08) 40%,
+    rgba(0, 0, 0, 0.07) 100%
+  );
+  background-blend-mode: overlay;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.25), inset -3px 0 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.book:hover {
+  transform: translateY(-8px);
+  box-shadow: 3px 0 14px rgba(0, 0, 0, 0.3), inset -3px 0 6px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+.book-spine-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  overflow: hidden;
+  max-height: 90%;
+  pointer-events: none;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px) rotate(var(--book-tilt, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--book-tilt, 0deg));
+  }
+}
+
+.book--new {
+  animation: slideUp 0.4s ease;
+}
+
+.shelf-empty {
+  font-size: 0.85rem;
+  color: var(--color-text-hint);
+  font-style: italic;
+  align-self: center;
+  width: 100%;
+  text-align: center;
+  padding-bottom: 20px;
+}
+
+/* Dark mode: deeper shelf plank */
+.dark .shelf-plank {
+  background: linear-gradient(
+    to bottom,
+    #7a5e38 0%,
+    #5e4428 45%,
+    #3e2e18 100%
+  );
+}
