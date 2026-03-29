@@ -46,7 +46,7 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
         <p className="dropzone-label">
           {isDragActive ? 'Drop your CSV here…' : 'Step #1: Drag & drop a CSV file here'}
         </p>
-        <p className="dropzone-hint">or click to browse — columns: date, description, amount</p>
+        <p className="dropzone-hint">The uploaded CSV file must have these columns: date, description, amount</p>
       </div>
 
       {file && <div className="file-name">📄 {file.name}</div>}
