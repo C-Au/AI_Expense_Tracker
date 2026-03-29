@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 
-export default function FileUpload({ onUploadSuccess, onError, loading, setLoading, onNewCategory }) {
+export default function FileUpload({ onUploadSuccess, onError, loading, setLoading, onNewCategory, onDeleteCategory }) {
   const [file, setFile] = useState(null);
 
   const onDrop = useCallback((accepted) => {
@@ -62,6 +62,9 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
         </button>
         <button className="new-category-btn" onClick={onNewCategory}>
           ➕ New Category
+        </button>
+        <button className="new-category-btn delete-category-btn-action" onClick={onDeleteCategory}>
+          🗑️ Delete Category
         </button>
       </div>
     </div>

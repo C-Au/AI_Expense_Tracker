@@ -6,6 +6,7 @@ import CategoryFilter from './components/CategoryFilter';
 import CategoryChart from './components/CategoryChart';
 import Bookshelf from './components/Bookshelf';
 import CreateCategoryModal from './components/CreateCategoryModal';
+import DeleteCategoryModal from './components/DeleteCategoryModal';
 import { getAllCategoryColors } from './utils/categoryColors';
 import './styles/app.css';
 
@@ -21,6 +22,7 @@ export default function App() {
   const [batches, setBatches] = useState([]);
   const [customCategories, setCustomCategories] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const toggleDark = () => {
     setDarkMode((prev) => {
@@ -146,6 +148,7 @@ export default function App() {
         setLoading={setLoading}
         darkMode={darkMode}
         onNewCategory={() => setModalOpen(true)}
+        onDeleteCategory={() => setDeleteModalOpen(true)}
       />
 
       <Bookshelf batches={batches} />
@@ -184,6 +187,13 @@ export default function App() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSuccess={fetchCustomCategories}
+      />
+
+      <DeleteCategoryModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={() => { fetchCustomCategories(); fetchExpenses(selectedCategory); }}
+        customCategories={customCategories}
       />
     </div>
   );

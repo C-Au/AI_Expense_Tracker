@@ -203,6 +203,8 @@ router.delete('/custom-categories/:name', async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: 'Custom category not found' });
     }
+    // Reassign any expenses with this category to "Other"
+    await Expense.updateMany({ category: name }, { $set: { category: 'Other' } });
     res.json({ message: 'Custom category deleted', name });
   } catch (err) {
     console.error('Delete custom category error:', err);
