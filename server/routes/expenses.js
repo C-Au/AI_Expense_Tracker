@@ -124,6 +124,43 @@ router.get('/batches', async (req, res) => {
   }
 });
 
+// GET /api/expenses/months — list distinct year-month values
+router.get('/months', async (req, res) => {
+  try {
+    const months = await Expense.aggregate([
+      {
+        $group: {
+          _id: { $substr: ['$date', 0, 7] }, // "YYYY-MM"
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: -1 } },
+    ]);
+    res.json(months.map((m) => ({ month: m._id, count: m.count })));
+  } catch (err) {
+    console.error('Months error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/expenses/by-month/:month — delete all expenses for a YYYY-MM
+router.delete('/by-month/:month', async (req, res) => {
+  try {
+    const { month } = req.params;
+    // Validate format YYYY-MM
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'Invalid month format. Use YYYY-MM.' });
+    }
+    const result = await Expense.deleteMany({
+      date: { $regex: `^${month}` },
+    });
+    res.json({ message: `Deleted ${result.deletedCount} expense(s) for ${month}`, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error('Delete by month error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // PATCH /api/expenses/:id — update category
 router.patch('/:id', async (req, res) => {
   try {

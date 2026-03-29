@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 
-export default function FileUpload({ onUploadSuccess, onError, loading, setLoading, onNewCategory, onDeleteCategory }) {
+export default function FileUpload({ onUploadSuccess, onError, loading, setLoading, onNewCategory, onDeleteCategory, onExport, hasExpenses, onDeleteByMonth }) {
   const [file, setFile] = useState(null);
 
   const onDrop = useCallback((accepted) => {
@@ -44,7 +44,7 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
         <input {...getInputProps()} />
         <div className="dropzone-icon">📂</div>
         <p className="dropzone-label">
-          {isDragActive ? 'Drop your CSV here…' : 'Drag & drop a CSV file here'}
+          {isDragActive ? 'Drop your CSV here…' : 'Step #1: Drag & drop a CSV file here'}
         </p>
         <p className="dropzone-hint">or click to browse — columns: date, description, amount</p>
       </div>
@@ -65,6 +65,22 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
         </button>
         <button className="new-category-btn delete-category-btn-action" onClick={onDeleteCategory}>
           🗑️ Delete Category
+        </button>
+        <button
+          className="new-category-btn export-btn-action"
+          onClick={onExport}
+          disabled={!hasExpenses}
+          title={hasExpenses ? 'Export current expenses to CSV' : 'Upload expenses first'}
+        >
+          ⬇️ Export CSV
+        </button>
+        <button
+          className="new-category-btn delete-month-btn-action"
+          onClick={onDeleteByMonth}
+          disabled={!hasExpenses}
+          title={hasExpenses ? 'Delete expenses by month' : 'No expenses to delete'}
+        >
+          📅 Delete by Month
         </button>
       </div>
     </div>

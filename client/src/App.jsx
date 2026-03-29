@@ -7,6 +7,7 @@ import CategoryChart from './components/CategoryChart';
 import Bookshelf from './components/Bookshelf';
 import CreateCategoryModal from './components/CreateCategoryModal';
 import DeleteCategoryModal from './components/DeleteCategoryModal';
+import DeleteByMonthModal from './components/DeleteByMonthModal';
 import { getAllCategoryColors } from './utils/categoryColors';
 import './styles/app.css';
 
@@ -23,6 +24,7 @@ export default function App() {
   const [customCategories, setCustomCategories] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteMonthModalOpen, setDeleteMonthModalOpen] = useState(false);
 
   const toggleDark = () => {
     setDarkMode((prev) => {
@@ -127,13 +129,53 @@ export default function App() {
       ? expenses
       : expenses.filter((e) => e.category === selectedCategory);
 
+  const handleExport = async () => {
+    const rows = filteredExpenses;
+    if (rows.length === 0) return;
+
+    const header = 'date,description,amount,category';
+    const lines = rows.map((e) => {
+      const date = e.date ? new Date(e.date).toISOString().slice(0, 10) : '';
+      const description = `"${String(e.description ?? '').replace(/"/g, '""')}"`;
+      const amount = e.amount ?? '';
+      const category = `"${String(e.category ?? '').replace(/"/g, '""')}"`;
+      return `${date},${description},${amount},${category}`;
+    });
+    const csvContent = [header, ...lines].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+
+    if (typeof window.showSaveFilePicker === 'function') {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: 'expenses.csv',
+          types: [{ description: 'CSV File', accept: { 'text/csv': ['.csv'] } }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError('Export failed: ' + err.message);
+        }
+      }
+    } else {
+      // Fallback: trigger browser download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'expenses.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   return (
     <div className={`app${darkMode ? ' dark' : ''}`}>
       <header className="app-header">
         <button className="toggle-btn toggle-btn--corner" onClick={toggleDark}>
           {darkMode ? '☀️ Light' : '🌙 Dark'}
         </button>
-        <h1 className="app-title">Simple Books AI Expense Tracker</h1>
+        <h1 className="app-title">Simple Books: AI Expense Tracker</h1>
         <p className="app-subtitle">
           Upload a CSV — AI will categorize your expenses automatically
         </p>
@@ -149,6 +191,9 @@ export default function App() {
         darkMode={darkMode}
         onNewCategory={() => setModalOpen(true)}
         onDeleteCategory={() => setDeleteModalOpen(true)}
+        onExport={handleExport}
+        hasExpenses={expenses.length > 0}
+        onDeleteByMonth={() => setDeleteMonthModalOpen(true)}
       />
 
       <Bookshelf batches={batches} />
@@ -194,6 +239,12 @@ export default function App() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={() => { fetchCustomCategories(); fetchExpenses(selectedCategory); }}
         customCategories={customCategories}
+      />
+
+      <DeleteByMonthModal
+        isOpen={deleteMonthModalOpen}
+        onClose={() => setDeleteMonthModalOpen(false)}
+        onSuccess={() => { fetchExpenses(selectedCategory); fetchBatches(); }}
       />
     </div>
   );
