@@ -133,14 +133,12 @@ export default function App() {
     const rows = filteredExpenses;
     if (rows.length === 0) return;
 
-    const header = 'date,description,amount,category';
-
-    const formatRow = (e) => {
+    const formatRow = (e, total = '') => {
       const date = e.date ? new Date(e.date).toISOString().slice(0, 10) : '';
       const description = `"${String(e.description ?? '').replace(/"/g, '""')}"`;
       const amount = e.amount ?? '';
       const category = `"${String(e.category ?? '').replace(/"/g, '""')}"`;
-      return `${date},${description},${amount},${category}`;
+      return `${date},${description},${amount},${category},${total}`;
     };
 
     const grouped = rows.reduce((acc, e) => {
@@ -152,10 +150,18 @@ export default function App() {
 
     const sortedCategories = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
 
+    const grandTotal = rows.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    const header = `date,description,amount,category,total,,"Grand Total",${grandTotal.toFixed(2)}`;
+
     const lines = [];
-    sortedCategories.forEach((cat, i) => {
-      grouped[cat].forEach((e) => lines.push(formatRow(e)));
-      if (i < sortedCategories.length - 1) lines.push('');
+
+    sortedCategories.forEach((cat) => {
+      const group = grouped[cat];
+      const categoryTotal = group.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      group.forEach((e, j) => {
+        lines.push(formatRow(e, j === group.length - 1 ? categoryTotal.toFixed(2) : ''));
+      });
+      lines.push('');
     });
 
     const csvContent = [header, ...lines].join('\n');
