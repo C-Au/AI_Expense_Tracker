@@ -134,15 +134,31 @@ export default function App() {
     if (rows.length === 0) return;
 
     const header = 'date,description,amount,category';
-    const lines = rows.map((e) => {
+
+    const formatRow = (e) => {
       const date = e.date ? new Date(e.date).toISOString().slice(0, 10) : '';
       const description = `"${String(e.description ?? '').replace(/"/g, '""')}"`;
       const amount = e.amount ?? '';
       const category = `"${String(e.category ?? '').replace(/"/g, '""')}"`;
       return `${date},${description},${amount},${category}`;
+    };
+
+    const grouped = rows.reduce((acc, e) => {
+      const key = e.category ?? '';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(e);
+      return acc;
+    }, {});
+
+    const sortedCategories = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+
+    const lines = [];
+    sortedCategories.forEach((cat, i) => {
+      grouped[cat].forEach((e) => lines.push(formatRow(e)));
+      if (i < sortedCategories.length - 1) lines.push('');
     });
+
     const csvContent = [header, ...lines].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
 
     if (typeof window.showSaveFilePicker === 'function') {
       try {
@@ -151,15 +167,24 @@ export default function App() {
           types: [{ description: 'CSV File', accept: { 'text/csv': ['.csv'] } }],
         });
         const writable = await handle.createWritable();
-        await writable.write(blob);
+        await writable.write(csvContent);
         await writable.close();
       } catch (err) {
-        if (err.name !== 'AbortError') {
+        if (err.name === 'AbortError') {
+          // user cancelled — do nothing
+        } else if (
+          err.name === 'NoModificationAllowedError' ||
+          err.name === 'NotAllowedError' ||
+          (err.message && err.message.toLowerCase().includes('open'))
+        ) {
+          setError('Cannot save: the file is open in another application. Close it and try again.');
+        } else {
           setError('Export failed: ' + err.message);
         }
       }
     } else {
       // Fallback: trigger browser download
+      const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
