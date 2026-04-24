@@ -2,7 +2,18 @@ require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const admin = require('firebase-admin');
 const expenseRoutes = require('./routes/expenses');
+const verifyToken = require('./middleware/auth');
+
+// Initialize Firebase Admin SDK
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  }),
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,8 +22,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/expenses', expenseRoutes);
+// Protected routes — require a valid Firebase ID token
+app.use('/api/expenses', verifyToken, expenseRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

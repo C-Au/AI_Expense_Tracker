@@ -8,10 +8,14 @@ import Bookshelf from './components/Bookshelf';
 import CreateCategoryModal from './components/CreateCategoryModal';
 import DeleteCategoryModal from './components/DeleteCategoryModal';
 import DeleteByMonthModal from './components/DeleteByMonthModal';
+import LoginPage from './components/LoginPage';
+import { auth, onAuthStateChanged, signOutUser } from './firebase';
 import { getAllCategoryColors } from './utils/categoryColors';
 import './styles/app.css';
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [expenses, setExpenses] = useState([]);
   const [categoryTotals, setCategoryTotals] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -32,6 +36,29 @@ export default function App() {
       return !prev;
     });
   };
+
+  // Auth state listener + axios token interceptor
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      setAuthLoading(false);
+    });
+
+    // Attach Firebase ID token to every request
+    const interceptor = axios.interceptors.request.use(async (config) => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const token = await currentUser.getIdToken();
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    return () => {
+      unsubscribe();
+      axios.interceptors.request.eject(interceptor);
+    };
+  }, []);
 
   const fetchExpenses = useCallback(async (category) => {
     try {
@@ -200,6 +227,20 @@ export default function App() {
     }
   };
 
+  // Auth loading splash
+  if (authLoading) {
+    return (
+      <div className={`app${darkMode ? ' dark' : ''}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <span className="login-spinner login-spinner--large" />
+      </div>
+    );
+  }
+
+  // Not signed in → show login page
+  if (!user) {
+    return <LoginPage darkMode={darkMode} />;
+  }
+
   return (
     <div className={`app${darkMode ? ' dark' : ''}`}>
       <header className="app-header">
@@ -210,6 +251,13 @@ export default function App() {
         <p className="app-subtitle">
           Upload a CSV — AI will categorize your expenses automatically
         </p>
+        <div className="user-bar">
+          {user.photoURL && (
+            <img src={user.photoURL} alt={user.displayName ?? 'User'} className="user-avatar" referrerPolicy="no-referrer" />
+          )}
+          <span className="user-name">{user.displayName ?? user.email}</span>
+          <button className="signout-btn" onClick={signOutUser}>Sign out</button>
+        </div>
       </header>
 
       {error && <div className="error-banner">Error: {error}</div>}
