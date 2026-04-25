@@ -99,24 +99,24 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!user) return;
     fetchExpenses(selectedCategory);
-  }, [selectedCategory, fetchExpenses]);
+  }, [user, selectedCategory, fetchExpenses]);
 
   useEffect(() => {
+    if (!user) return;
     fetchCategories();
-  }, [expenses, fetchCategories]);
+  }, [user, expenses, fetchCategories]);
 
   useEffect(() => {
+    if (!user) return;
     fetchBatches();
-  }, [fetchBatches]);
+  }, [user, fetchBatches]);
 
   useEffect(() => {
+    if (!user) return;
     fetchCustomCategories();
-  }, [fetchCustomCategories]);
-
-  useEffect(() => {
-    fetchCustomCategories();
-  }, [fetchCustomCategories]);
+  }, [user, fetchCustomCategories]);
 
   const handleUploadSuccess = (newExpenses) => {
     setExpenses((prev) => [...newExpenses, ...prev]);
