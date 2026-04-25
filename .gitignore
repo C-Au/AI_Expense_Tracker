@@ -2,4 +2,5 @@ node_modules/
 .env
 dist/
 *.log
-*.json
+serviceAccountKey.json
+firebase-adminsdk*.json
