@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { getAllCategoryColors } from '../utils/categoryColors';
 
-export default function ExpenseTable({ expenses, onDelete, onCategoryChange, categoryColors = {} }) {
+export default function ExpenseTable({ expenses, onDelete, onCategoryChange, categoryColors = {}, rules = [] }) {
+  // Build a Set of normalized descriptions that have a saved rule
+  const ruleDescriptions = new Set(rules.map((r) => r.description));
   const [sortField, setSortField] = useState('date');
   const [sortDir, setSortDir] = useState('desc');
   const colors = Object.keys(categoryColors).length > 0 ? categoryColors : getAllCategoryColors();
@@ -68,16 +70,21 @@ export default function ExpenseTable({ expenses, onDelete, onCategoryChange, cat
                 ${Number(exp.amount).toFixed(2)}
               </td>
               <td>
-                <select
-                  className="category-select"
-                  value={exp.category}
-                  style={{ background: colors[exp.category] || '#adb5bd' }}
-                  onChange={(e) => onCategoryChange(exp._id, e.target.value)}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                <div className="category-cell">
+                  <select
+                    className="category-select"
+                    value={exp.category}
+                    style={{ background: colors[exp.category] || '#adb5bd' }}
+                    onChange={(e) => onCategoryChange(exp._id, e.target.value)}
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  {ruleDescriptions.has(exp.description.toLowerCase().trim()) && (
+                    <span className="rule-indicator" title="AI will remember this category">✦</span>
+                  )}
+                </div>
               </td>
               <td>
                 <button className="delete-btn" onClick={() => onDelete(exp._id)}>

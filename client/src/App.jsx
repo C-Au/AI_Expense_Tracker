@@ -9,6 +9,7 @@ import CreateCategoryModal from './components/CreateCategoryModal';
 import DeleteCategoryModal from './components/DeleteCategoryModal';
 import DeleteByMonthModal from './components/DeleteByMonthModal';
 import LoginPage from './components/LoginPage';
+import CategoryRulesModal from './components/CategoryRulesModal';
 import { auth, onAuthStateChanged, signOutUser } from './firebase';
 import { getAllCategoryColors } from './utils/categoryColors';
 import './styles/app.css';
@@ -29,6 +30,8 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteMonthModalOpen, setDeleteMonthModalOpen] = useState(false);
+  const [rulesModalOpen, setRulesModalOpen] = useState(false);
+  const [rules, setRules] = useState([]);
 
   const toggleDark = () => {
     setDarkMode((prev) => {
@@ -98,6 +101,15 @@ export default function App() {
     }
   }, []);
 
+  const fetchRules = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/expenses/rules');
+      setRules(res.data);
+    } catch (err) {
+      console.error('Failed to fetch AI rules:', err);
+    }
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     fetchExpenses(selectedCategory);
@@ -118,6 +130,11 @@ export default function App() {
     fetchCustomCategories();
   }, [user, fetchCustomCategories]);
 
+  useEffect(() => {
+    if (!user) return;
+    fetchRules();
+  }, [user, fetchRules]);
+
   const handleUploadSuccess = (newExpenses) => {
     setExpenses((prev) => [...newExpenses, ...prev]);
     fetchCategories();
@@ -130,6 +147,7 @@ export default function App() {
       const res = await axios.patch(`/api/expenses/${id}`, { category: newCategory });
       setExpenses((prev) => prev.map((e) => (e._id === id ? res.data : e)));
       fetchCategories();
+      fetchRules(); // keep rules state in sync after auto-save
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     }
@@ -256,6 +274,7 @@ export default function App() {
             <img src={user.photoURL} alt={user.displayName ?? 'User'} className="user-avatar" referrerPolicy="no-referrer" />
           )}
           <span className="user-name">{user.displayName ?? user.email}</span>
+          <button className="ai-memory-btn" onClick={() => setRulesModalOpen(true)}>AI Memory</button>
           <button className="signout-btn" onClick={signOutUser}>Sign out</button>
         </div>
       </header>
@@ -303,6 +322,7 @@ export default function App() {
             onCategoryChange={handleCategoryChange}
             darkMode={darkMode}
             categoryColors={categoryColors}
+            rules={rules}
           />
         </div>
       )}
@@ -324,6 +344,12 @@ export default function App() {
         isOpen={deleteMonthModalOpen}
         onClose={() => setDeleteMonthModalOpen(false)}
         onSuccess={() => { fetchExpenses(selectedCategory); fetchBatches(); }}
+      />
+
+      <CategoryRulesModal
+        isOpen={rulesModalOpen}
+        onClose={() => setRulesModalOpen(false)}
+        onRuleDeleted={fetchRules}
       />
     </div>
   );

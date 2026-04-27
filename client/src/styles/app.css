@@ -934,6 +934,136 @@
   white-space: nowrap;
 }
 
+/* ============================================
+   AI Memory Button
+   ============================================ */
+.ai-memory-btn {
+  padding: 6px 14px;
+  border: 1px solid #4a6cf7;
+  border-radius: 20px;
+  background: transparent;
+  color: #4a6cf7;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.ai-memory-btn:hover {
+  background: #4a6cf7;
+  color: #fff;
+}
+
+.dark .ai-memory-btn {
+  border-color: #7b9cff;
+  color: #7b9cff;
+}
+
+.dark .ai-memory-btn:hover {
+  background: #4a6cf7;
+  color: #fff;
+}
+
+/* ============================================
+   Rule Indicator in ExpenseTable
+   ============================================ */
+.category-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rule-indicator {
+  font-size: 0.65rem;
+  color: #4a6cf7;
+  cursor: default;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.dark .rule-indicator {
+  color: #7b9cff;
+}
+
+/* ============================================
+   CategoryRulesModal
+   ============================================ */
+.rules-modal-content {
+  max-width: 580px;
+}
+
+.rules-modal-body {
+  padding: 20px 24px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.rules-modal-description {
+  font-size: 0.88rem;
+  color: var(--color-subtitle);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.rules-empty {
+  text-align: center;
+  color: var(--color-text-hint);
+  font-size: 0.9rem;
+  padding: 32px 0;
+}
+
+.rules-loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.rules-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.rules-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-th);
+  border-bottom: 1px solid var(--border-th);
+}
+
+.rules-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-td);
+  color: var(--color-td);
+  vertical-align: middle;
+}
+
+.rules-td-description {
+  word-break: break-word;
+  max-width: 260px;
+}
+
+.rules-category-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--bg-pill-inactive);
+  color: var(--pill-inactive-color);
+  white-space: nowrap;
+}
+
+.rules-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-th);
+}
+
 .signout-btn {
   padding: 5px 12px;
   background: none;

@@ -3,6 +3,7 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const Expense = require('../models/Expense');
 const CustomCategory = require('../models/CustomCategory');
+const CategoryRule = require('../models/CategoryRule');
 const { parseCSV } = require('../services/csvParser');
 const { categorizeExpenses } = require('../services/aiCategorizer');
 
@@ -34,10 +35,16 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'CSV file is empty or has no valid rows' });
     }
 
-    // 2. Categorize with AI (batched, single API call)
-    const categorized = await categorizeExpenses(parsed);
+    // 2. Fetch user's saved rules so exact matches bypass the AI
+    const userRules = await CategoryRule.find(
+      { userId: req.user.uid },
+      { description: 1, originalDescription: 1, category: 1, _id: 0 }
+    ).lean();
 
-    // 3. Bulk insert with shared uploadBatch UUID
+    // 3. Categorize with AI (exact-match rules skip API; others get few-shot context)
+    const categorized = await categorizeExpenses(parsed, userRules);
+
+    // 4. Bulk insert with shared uploadBatch UUID
     const batchId = uuidv4();
     const docs = categorized.map((exp) => ({ ...exp, uploadBatch: batchId }));
     const saved = await Expense.insertMany(docs);
@@ -161,7 +168,7 @@ router.delete('/by-month/:month', async (req, res) => {
   }
 });
 
-// PATCH /api/expenses/:id — update category
+// PATCH /api/expenses/:id — update category and upsert a user rule
 router.patch('/:id', async (req, res) => {
   try {
     const { category } = req.body;
@@ -176,6 +183,20 @@ router.patch('/:id', async (req, res) => {
     if (!updated) {
       return res.status(404).json({ error: 'Expense not found' });
     }
+
+    // Persist this correction as an AI rule for future uploads
+    const normalizedDesc = updated.description.toLowerCase().trim();
+    await CategoryRule.findOneAndUpdate(
+      { userId: req.user.uid, description: normalizedDesc },
+      {
+        userId: req.user.uid,
+        description: normalizedDesc,
+        originalDescription: updated.description,
+        category,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     res.json(updated);
   } catch (err) {
     console.error('Update category error:', err);
@@ -193,6 +214,38 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: 'Deleted successfully', id: req.params.id });
   } catch (err) {
     console.error('Delete error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================
+// AI Category Rules Routes
+// ============================================
+
+// GET /api/expenses/rules — list all saved rules for the current user
+router.get('/rules', async (req, res) => {
+  try {
+    const rules = await CategoryRule.find({ userId: req.user.uid }).sort({ updatedAt: -1 });
+    res.json(rules);
+  } catch (err) {
+    console.error('Fetch rules error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/expenses/rules/:id — delete a specific rule (scoped to current user)
+router.delete('/rules/:id', async (req, res) => {
+  try {
+    const deleted = await CategoryRule.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.uid,
+    });
+    if (!deleted) {
+      return res.status(404).json({ error: 'Rule not found' });
+    }
+    res.json({ message: 'Rule deleted', id: req.params.id });
+  } catch (err) {
+    console.error('Delete rule error:', err);
     res.status(500).json({ error: err.message });
   }
 });
