@@ -156,6 +156,21 @@
   padding: 12px 16px;
   border-radius: 8px;
   margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.error-banner-hint {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.error-banner-hint code {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: monospace;
 }
 
 /* ============================================

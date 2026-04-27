@@ -29,10 +29,15 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // 1. Parse CSV
-    const parsed = parseCSV(req.file.buffer);
+    // 1. Parse CSV — tag parse failures so the client can show a reformat hint
+    let parsed;
+    try {
+      parsed = parseCSV(req.file.buffer);
+    } catch (parseErr) {
+      return res.status(400).json({ error: parseErr.message, csvParseError: true });
+    }
     if (parsed.length === 0) {
-      return res.status(400).json({ error: 'CSV file is empty or has no valid rows' });
+      return res.status(400).json({ error: 'CSV file is empty or has no valid rows', csvParseError: true });
     }
 
     // 2. Fetch user's saved rules so exact matches bypass the AI

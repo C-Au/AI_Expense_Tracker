@@ -22,6 +22,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [csvParseError, setCsvParseError] = useState(false);
   const [darkMode, setDarkMode] = useState(
     () => localStorage.getItem('darkMode') === 'true'
   );
@@ -140,6 +141,12 @@ export default function App() {
     fetchCategories();
     fetchBatches();
     setError(null);
+    setCsvParseError(false);
+  };
+
+  const handleUploadError = (message, isCsvError = false) => {
+    setError(message);
+    setCsvParseError(!!isCsvError);
   };
 
   const handleCategoryChange = async (id, newCategory) => {
@@ -279,11 +286,21 @@ export default function App() {
         </div>
       </header>
 
-      {error && <div className="error-banner">Error: {error}</div>}
+      {error && (
+        <div className="error-banner">
+          <span>Error: {error}</span>
+          {csvParseError && (
+            <span className="error-banner-hint">
+              Please reformat your CSV to have 3 columns: <strong>date, description, amount</strong><br />
+              e.g., <code>2024-01-05, Whole Foods Market, 87.43</code>
+            </span>
+          )}
+        </div>
+      )}
 
       <FileUpload
         onUploadSuccess={handleUploadSuccess}
-        onError={setError}
+        onError={handleUploadError}
         loading={loading}
         setLoading={setLoading}
         darkMode={darkMode}

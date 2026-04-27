@@ -29,7 +29,10 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
       onUploadSuccess(res.data.expenses);
       setFile(null);
     } catch (err) {
-      onError(err.response?.data?.error || 'Upload failed. Please try again.');
+      onError(
+        err.response?.data?.error || 'Upload failed. Please try again.',
+        err.response?.data?.csvParseError ?? false
+      );
     } finally {
       setLoading(false);
     }
@@ -46,7 +49,7 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
         <p className="dropzone-label">
           {isDragActive ? 'Drop your CSV here…' : 'Step #1: Drag & drop a CSV file here'}
         </p>
-        <p className="dropzone-hint">The uploaded CSV file must have these columns: date, description, amount</p>
+        <p className="dropzone-hint">The uploaded CSV file must have these columns and in this order: date, description, amount</p>
       </div>
 
       {file && <div className="file-name">📄 {file.name}</div>}
@@ -58,7 +61,7 @@ export default function FileUpload({ onUploadSuccess, onError, loading, setLoadi
           disabled={loading || !file}
         >
           {loading && <span className="spinner" />}
-          {loading ? 'Categorizing with AI…' : 'Upload & Categorize'}
+          {loading ? 'Categorizing with AI…' : 'Step #2: Upload & Categorize'}
         </button>
         <button className="new-category-btn" onClick={onNewCategory}>
           ➕ New Category
