@@ -42,14 +42,7 @@ export default function LoginPage({ darkMode }) {
     // Template literals (backticks + ${}) let us conditionally add the 'dark' class.
     <div className={`login-page${darkMode ? ' dark' : ''}`}>
       <div className="login-card">
-        {/* The app logo SVG */}
-        <div className="login-logo">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="48" height="48" rx="12" fill="#4f46e5" />
-            <path d="M14 34V16h6l4 12 4-12h6v18h-4V22l-4.5 12h-3L18 22v12h-4z" fill="white" />
-          </svg>
-        </div>
-        <h1 className="login-title">Simple Books</h1>
+        <h1 className="login-title">SimpleBiz Books</h1>
         <p className="login-subtitle">AI-powered expense tracking</p>
 
         {/* Only render the error message if there is one (short-circuit rendering). */}

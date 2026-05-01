@@ -425,7 +425,7 @@ export default function App() {
         <button className="toggle-btn toggle-btn--corner" onClick={toggleDark}>
           {darkMode ? '☀️ Light' : '🌙 Dark'}
         </button>
-        <h1 className="app-title">Simple Books: AI Expense Tracker</h1>
+        <h1 className="app-title">SimpleBiz Books: AI Expense Tracker</h1>
         <p className="app-subtitle">
           Upload a CSV — AI will categorize your expenses automatically
         </p>

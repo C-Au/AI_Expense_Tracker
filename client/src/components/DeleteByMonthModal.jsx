@@ -132,8 +132,3 @@ export default function DeleteByMonthModal({ isOpen, onClose, onSuccess }) {
     </div>
   );
 }
-        </div>
-      </div>
-    </div>
-  );
-}
