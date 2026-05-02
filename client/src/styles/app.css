@@ -919,8 +919,112 @@
 }
 
 /* ============================================
-   User Bar (header)
+   Login — Email/Password form elements
    ============================================ */
+
+/* Text inputs for email and password */
+.login-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1px solid var(--toggle-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg-page);
+  color: var(--color-label);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.login-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* Primary submit button (Sign In / Create Account / Send Reset Email) */
+.email-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 20px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  margin-bottom: 4px;
+}
+
+.email-submit-btn:hover:not(:disabled) {
+  background: #4338ca;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+
+.email-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* "— or —" divider between the email form and the Google button */
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--color-subtitle);
+  margin: 4px 0;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--toggle-border);
+}
+
+/* Text-only buttons: "Forgot password?", sign-up/sign-in toggle, "← Back" */
+.login-link-btn {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  color: #4f46e5;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  transition: color 0.15s ease;
+}
+
+.login-link-btn:hover {
+  color: #4338ca;
+  text-decoration: underline;
+}
+
+/* Success message (e.g. "Reset email sent!") */
+.login-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  width: 100%;
+  text-align: center;
+}
+
+.dark .login-success {
+  background: #052e16;
+  border-color: #166534;
+  color: #86efac;
+}
 .user-bar {
   display: flex;
   align-items: center;

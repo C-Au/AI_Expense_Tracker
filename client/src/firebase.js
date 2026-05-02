@@ -12,6 +12,9 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 
 // Firebase needs these config values to know which project to connect to.
@@ -45,6 +48,21 @@ export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
 
 // Signs the current user out.
 export const signOutUser = () => signOut(auth);
+
+// Signs in an existing user with their email and password.
+// Returns a promise that resolves with the user credential on success.
+export const signInWithEmail = (email, password) =>
+  signInWithEmailAndPassword(auth, email, password);
+
+// Creates a brand-new account with email and password.
+// Returns a promise that resolves with the new user credential on success.
+export const signUpWithEmail = (email, password) =>
+  createUserWithEmailAndPassword(auth, email, password);
+
+// Sends a password-reset email to the given address.
+// Firebase emails a link the user can click to choose a new password.
+export const resetPassword = (email) =>
+  sendPasswordResetEmail(auth, email);
 
 // Re-export onAuthStateChanged so App.jsx can import it from here
 // instead of directly from 'firebase/auth'.
