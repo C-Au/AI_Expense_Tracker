@@ -21,6 +21,9 @@ import { useState, useEffect, useCallback } from 'react';
 // the built-in browser fetch API. It also auto-parses JSON responses.
 import axios from 'axios';
 
+// Vercel Web Analytics for tracking page views and user interactions.
+import { Analytics } from '@vercel/analytics/react';
+
 // Import all child components.
 import FileUpload from './components/FileUpload';
 import ExpenseTable from './components/ExpenseTable';
@@ -536,6 +539,9 @@ export default function App() {
         onClose={() => setRulesModalOpen(false)}
         onRuleDeleted={fetchRules}
       />
+
+      {/* Vercel Web Analytics tracking */}
+      <Analytics />
     </div>
   );
 }
