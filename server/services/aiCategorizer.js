@@ -13,29 +13,29 @@
 //   3. Batch API call    — instead of calling the AI once per expense,
 //      we send ALL uncached descriptions in a single request.
 // ---------------------------------------------------------------------------
-const OpenAI = require('openai');
+const OpenAI = require("openai");
 
 // We use the OpenAI SDK but pointed at OpenRouter, which lets us access
 // many AI models (including OpenAI's) through one unified API.
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: 'https://openrouter.ai/api/v1',
+  baseURL: "https://openrouter.ai/api/v1",
 });
 
 // The full list of allowed categories.
 // Any AI response that isn't in this list gets replaced with 'Other'
 // to prevent unexpected categories from being saved to the database.
 const VALID_CATEGORIES = [
-  'Food & Dining',
-  'Transport',
-  'Housing',
-  'Utilities',
-  'Healthcare',
-  'Entertainment',
-  'Shopping',
-  'Travel',
-  'Education',
-  'Other',
+  "Food & Dining",
+  "Transport",
+  "Housing",
+  "Utilities",
+  "Healthcare",
+  "Entertainment",
+  "Shopping",
+  "Travel",
+  "Education",
+  "Other",
 ];
 
 // A Map works like a dictionary: it stores key → value pairs.
@@ -55,9 +55,16 @@ const categoryCache = new Map();
  *   1. Exact match: if a description matches a rule exactly, the AI is skipped for it.
  *   2. Few-shot: remaining rules are injected into the AI prompt as examples.
  */
-async function categorizeExpenses(expenses, userRules = []) {
+async function categorizeExpenses(
+  expenses,
+  userRules = [],
+  customCategories = [],
+) {
   // If there's nothing to categorize, return early.
   if (!expenses || expenses.length === 0) return expenses;
+
+    // Merge built-in categories with any user-created custom ones.
+  const validCategories = [...VALID_CATEGORIES, ...customCategories];
 
   // Convert the userRules array into a Map for O(1) lookup speed.
   // (Searching an array is O(n); looking up a Map key is O(1).)
@@ -97,15 +104,20 @@ async function categorizeExpenses(expenses, userRules = []) {
     const fewShotBlock =
       fewShotRules.length > 0
         ? `\nThe user has established these categorization preferences (use them as guidance for similar descriptions):\n${JSON.stringify(
-            fewShotRules.map((r) => ({ description: r.originalDescription || r.description, category: r.category }))
+            fewShotRules.map((r) => ({
+              description: r.originalDescription || r.description,
+              category: r.category,
+            })),
           )}\n`
-        : '';
+        : "";
 
     // Build the full prompt text that gets sent to the AI.
     // We're very explicit: "return ONLY a JSON array" so the response is
     // easy to parse and we don't get extra explanation text.
+    const allCategoryNames = validCategories.join(", ");
+
     const prompt = `Categorize each expense description into exactly one of these categories:
-Food & Dining, Transport, Housing, Utilities, Healthcare, Entertainment, Shopping, Travel, Education, Other.
+${allCategoryNames}.
 ${fewShotBlock}
 Return ONLY a valid JSON array of category strings in the same order as the input descriptions.
 Do not include any explanation or additional text — just the JSON array.
@@ -115,9 +127,9 @@ ${JSON.stringify(uncachedDescriptions)}`;
 
     // Send the prompt to the AI and wait for the response.
     const message = await client.chat.completions.create({
-      model: 'openai/gpt-4o-mini',   // Cheap and fast model — good for classification.
-      max_tokens: 1024,               // Limit response length to keep costs low.
-      messages: [{ role: 'user', content: prompt }],
+      model: "openai/gpt-4o-mini", // Cheap and fast model — good for classification.
+      max_tokens: 1024, // Limit response length to keep costs low.
+      messages: [{ role: "user", content: prompt }],
     });
 
     // The AI's reply is in message.choices[0].message.content.
@@ -139,16 +151,21 @@ ${JSON.stringify(uncachedDescriptions)}`;
     }
 
     // Sanity check: the AI should return exactly one category per description.
-    if (!Array.isArray(categories) || categories.length !== uncachedDescriptions.length) {
+    if (
+      !Array.isArray(categories) ||
+      categories.length !== uncachedDescriptions.length
+    ) {
       throw new Error(
-        `AI returned ${categories.length} categories for ${uncachedDescriptions.length} descriptions`
+        `AI returned ${categories.length} categories for ${uncachedDescriptions.length} descriptions`,
       );
     }
 
     // Store each result in the in-memory cache.
     // If the AI returned a category we don't recognize, fall back to 'Other'.
     uncachedDescriptions.forEach((desc, i) => {
-      const category = VALID_CATEGORIES.includes(categories[i]) ? categories[i] : 'Other';
+      const category = validCategories.includes(categories[i])
+        ? categories[i]
+        : "Other";
       categoryCache.set(desc.toLowerCase().trim(), category);
     });
   }
@@ -157,7 +174,8 @@ ${JSON.stringify(uncachedDescriptions)}`;
   // The ?? operator means "use 'Other' if the left side is null or undefined".
   return expenses.map((exp) => ({
     ...exp,
-    category: categoryCache.get(exp.description.toLowerCase().trim()) ?? 'Other',
+    category:
+      categoryCache.get(exp.description.toLowerCase().trim()) ?? "Other",
   }));
 }
 

@@ -78,16 +78,17 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     }
 
     // Step 2: Load the user's saved category rules from the database.
-    // ".lean()" returns plain JavaScript objects instead of Mongoose documents,
-    // which is faster when you only need to read (not save) the data.
     const userRules = await CategoryRule.find(
       { userId: req.user.uid },
       { description: 1, originalDescription: 1, category: 1, _id: 0 }
     ).lean();
 
+    // NEW: Load custom category names so the AI knows they exist.
+    const customCats = await CustomCategory.find({}, { name: 1, _id: 0 }).lean();
+    const customCategoryNames = customCats.map((c) => c.name);
+
     // Step 3: Send the expenses to the AI for categorization.
-    // Exact-match rules skip the AI call entirely (faster + cheaper).
-    const categorized = await categorizeExpenses(parsed, userRules);
+    const categorized = await categorizeExpenses(parsed, userRules, customCategoryNames);
 
     // Step 4: Save all the categorized expenses to MongoDB in one bulk insert.
     // uuidv4() creates a unique batch ID shared by all expenses in this upload.
