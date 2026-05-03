@@ -29,8 +29,11 @@ export default function PaywallModal({ onPurchaseComplete, darkMode }) {
 
   const [paywallError, setPaywallError] = useState(null);
 
+  // Incremented each time the user clicks Retry, which causes the effect to re-run.
+  const [retryTrigger, setRetryTrigger] = useState(0);
+
   useEffect(() => {
-    // Guard: only launch once, and only once the container div is in the DOM.
+    // Guard: only launch once per trigger, and only once the container div is in the DOM.
     if (hasLaunched.current || !containerRef.current) return;
     hasLaunched.current = true;
 
@@ -67,10 +70,9 @@ export default function PaywallModal({ onPurchaseComplete, darkMode }) {
     }
 
     launchPaywall();
-    // onPurchaseComplete is stable (inline arrow in App.jsx state setter),
-    // but we only want this to run on mount — hence empty dep array.
+    // retryTrigger causes this effect to re-run when the user clicks Retry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [retryTrigger]);
 
   return (
     <div className={`paywall-overlay${darkMode ? ' dark' : ''}`}>
@@ -81,9 +83,10 @@ export default function PaywallModal({ onPurchaseComplete, darkMode }) {
           <button
             className="signout-btn"
             onClick={() => {
-              // Reset flags so the effect can re-run on retry.
+              // Reset the launch guard and bump the trigger so the effect re-runs.
               hasLaunched.current = false;
               setPaywallError(null);
+              setRetryTrigger((n) => n + 1);
             }}
           >
             Retry
