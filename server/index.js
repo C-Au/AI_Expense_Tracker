@@ -58,7 +58,7 @@ const PORT = process.env.PORT || 5000;
 // ---------------------------------------------------------------------------
 
 // Allow requests from any origin (our React dev server).
-app.use(cors({ origin: 'https://ai-expense-tracker-olive.vercel.app' }));
+app.use(cors({ origin: 'https://www.simplebizbooks.app' }));
 
 // Automatically parse JSON request bodies.
 // Without this, req.body would be undefined when the client sends JSON.
