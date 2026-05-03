@@ -32,9 +32,13 @@ import DeleteCategoryModal from './components/DeleteCategoryModal';
 import DeleteByMonthModal from './components/DeleteByMonthModal';
 import LoginPage from './components/LoginPage';
 import CategoryRulesModal from './components/CategoryRulesModal';
+import PaywallModal from './components/PaywallModal';
 
 // Firebase auth helpers and our color utility.
 import { auth, onAuthStateChanged, signOutUser } from './firebase';
+
+// RevenueCat helpers for subscription / entitlement checking.
+import { configureRevenueCat, getCustomerInfo, hasPremiumAccess } from './revenuecat';
 import { getAllCategoryColors } from './utils/categoryColors';
 
 // Global CSS styles.
@@ -56,6 +60,11 @@ export default function App() {
   // True while we're waiting to find out if a user is signed in.
   // We show a loading spinner during this time instead of flashing the login page.
   const [authLoading, setAuthLoading] = useState(true);
+
+  // RevenueCat entitlement state.
+  // null = still checking, true = active subscription, false = no subscription.
+  // We keep it null until we get a confirmed answer to avoid flashing the paywall.
+  const [isPro, setIsPro] = useState(null);
 
   // The array of expense objects currently shown in the table.
   const [expenses, setExpenses] = useState([]);
@@ -118,6 +127,25 @@ export default function App() {
     // It returns an "unsubscribe" function we call on cleanup.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);    // null = signed out, object = signed in
+
+      if (firebaseUser) {
+        // User just signed in — configure RevenueCat with their Firebase UID
+        // and immediately check whether they have an active subscription.
+        try {
+          configureRevenueCat(firebaseUser.uid);
+          const customerInfo = await getCustomerInfo();
+          setIsPro(hasPremiumAccess(customerInfo));
+        } catch (err) {
+          // If RC is unreachable, default to showing the paywall.
+          // This is safer than accidentally granting free access.
+          console.error('RevenueCat entitlement check failed:', err);
+          setIsPro(false);
+        }
+      } else {
+        // User signed out — reset entitlement so the next sign-in re-checks.
+        setIsPro(null);
+      }
+
       setAuthLoading(false);    // We now know the auth state — hide the splash screen.
     });
 
@@ -400,9 +428,10 @@ export default function App() {
   // Render
   // ---------------------------------------------------------------------------
 
-  // Show a full-screen spinner while we wait to find out if a user is signed in.
-  // Without this, the login page would flash briefly for already-signed-in users.
-  if (authLoading) {
+  // Show a full-screen spinner while we wait to find out if a user is signed in,
+  // or while the RC entitlement check is in flight (isPro === null).
+  // Without this, the login page or paywall would flash briefly on re-login.
+  if (authLoading || (user && isPro === null)) {
     return (
       <div className={`app${darkMode ? ' dark' : ''}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <span className="login-spinner login-spinner--large" />
@@ -415,7 +444,18 @@ export default function App() {
     return <LoginPage darkMode={darkMode} />;
   }
 
-  // Main app UI — only rendered when a user is signed in.
+  // If the user is signed in but doesn't have an active subscription,
+  // show the RevenueCat paywall. Once they subscribe, isPro flips to true.
+  if (!isPro) {
+    return (
+      <PaywallModal
+        onPurchaseComplete={() => setIsPro(true)}
+        darkMode={darkMode}
+      />
+    );
+  }
+
+  // Main app UI — only rendered when a user is signed in AND has a subscription.
   return (
     <div className={`app${darkMode ? ' dark' : ''}`}>
       {/* ------------------------------------------------------------------ */}

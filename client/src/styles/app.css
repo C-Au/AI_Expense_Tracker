@@ -558,6 +558,49 @@
   padding-bottom: 20px;
 }
 
+/* ============================================
+   RevenueCat Paywall
+   ============================================ */
+
+/* Full-screen overlay that sits above everything while the paywall is shown. */
+.paywall-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg-page);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* RC injects its managed paywall UI into this element.
+   It must have an explicit size for RC to render correctly. */
+.paywall-container {
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Error state shown when RC fails to load the paywall. */
+.paywall-error-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  max-width: 360px;
+  text-align: center;
+}
+
+.paywall-error-msg {
+  color: var(--error-color);
+  font-size: 0.95rem;
+}
+
 /* Dark mode: deeper shelf plank */
 .dark .shelf-plank {
   background: linear-gradient(
