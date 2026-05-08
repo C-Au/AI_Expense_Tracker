@@ -8,6 +8,9 @@
 //   3. Re-exports RC error types so other files don't need to import RC directly.
 // ---------------------------------------------------------------------------
 import { Purchases, ErrorCode, PurchasesError } from "@revenuecat/purchases-js";
+import {dotenv} from 'dotenv';
+
+dotenv.config();
 
 // The entitlement identifier as configured in the RevenueCat dashboard.
 // Both the monthly and yearly products grant this same entitlement.
@@ -37,7 +40,7 @@ export function configureRevenueCat(appUserId) {
   // Configure the SDK. Purchases.configure() must only be called once per user
   // session — calling it again for the same user throws an error.
   purchasesInstance = Purchases.configure({
-    apiKey: import.meta.env.VITE_REVENUECAT_API_KEY,
+    apiKey: process.env.VITE_REVENUECAT_API_KEY,
     appUserId,
   });
 
