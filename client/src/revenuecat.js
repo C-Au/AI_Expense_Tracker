@@ -7,11 +7,11 @@
 //   2. Exposes helpers to check entitlements and fetch customer info.
 //   3. Re-exports RC error types so other files don't need to import RC directly.
 // ---------------------------------------------------------------------------
-import { Purchases, ErrorCode, PurchasesError } from "@revenuecat/purchases-js";
+import { Purchases, ErrorCode, PurchasesError } from '@revenuecat/purchases-js';
 
 // The entitlement identifier as configured in the RevenueCat dashboard.
 // Both the monthly and yearly products grant this same entitlement.
-export const RC_ENTITLEMENT = "AI Expense Tracker App Pro";
+export const RC_ENTITLEMENT = 'AI Expense Tracker App Pro';
 
 // Module-level variable — holds the single Purchases instance for the session.
 // null means the SDK has not yet been configured.
@@ -38,7 +38,7 @@ export function configureRevenueCat(appUserId) {
   // session — calling it again for the same user throws an error.
   purchasesInstance = Purchases.configure({
     apiKey: import.meta.env.VITE_REVENUECAT_API_KEY,
-    appUserId,  
+    appUserId,
   });
 
   configuredUserId = appUserId;
