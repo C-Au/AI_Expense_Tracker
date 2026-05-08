@@ -43,6 +43,13 @@ const expenseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // The Firebase UID of the user who owns this expense.
+    // Scopes all queries so users only see their own data.
+    userId: {
+      type: String,
+      required: true,
+    },
   },
   // { timestamps: true } tells Mongoose to automatically add
   // "createdAt" and "updatedAt" fields to every document.

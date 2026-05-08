@@ -93,7 +93,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     // Step 4: Save all the categorized expenses to MongoDB in one bulk insert.
     // uuidv4() creates a unique batch ID shared by all expenses in this upload.
     const batchId = uuidv4();
-    const docs = categorized.map((exp) => ({ ...exp, uploadBatch: batchId }));
+    const docs = categorized.map((exp) => ({ ...exp, uploadBatch: batchId, userId: req.user.uid }));
     const saved = await Expense.insertMany(docs);
 
     // Respond with 201 Created and the saved expenses.
@@ -120,7 +120,7 @@ router.get('/', async (req, res) => {
     const { category, batch, sortBy = 'date', order = 'desc' } = req.query;
 
     // Build a MongoDB filter object dynamically based on what was provided.
-    const filter = {};
+    const filter = { userId: req.user.uid };
     if (category) filter.category = category;
     if (batch) filter.uploadBatch = batch;
 
@@ -146,7 +146,7 @@ router.get('/categories', async (req, res) => {
   try {
     const { batch } = req.query;
     // If a batch filter is provided, only aggregate that batch's expenses.
-    const match = batch ? { uploadBatch: batch } : {};
+    const match = { userId: req.user.uid, ...(batch ? { uploadBatch: batch } : {}) };
 
     // MongoDB aggregation pipeline — think of it as a series of data
     // transformation steps applied one after another.
@@ -190,6 +190,7 @@ router.get('/categories', async (req, res) => {
 router.get('/batches', async (req, res) => {
   try {
     const batches = await Expense.aggregate([
+      { $match: { userId: req.user.uid } },
       {
         $group: {
           _id: '$uploadBatch',         // Group by the batch UUID.
@@ -221,6 +222,7 @@ router.get('/batches', async (req, res) => {
 router.get('/months', async (req, res) => {
   try {
     const months = await Expense.aggregate([
+      { $match: { userId: req.user.uid } },
       {
         $group: {
           // $substr extracts the first 7 characters of the date string ("YYYY-MM").
@@ -257,6 +259,7 @@ router.delete('/by-month/:month', async (req, res) => {
     // $regex matches all dates that START with "YYYY-MM".
     // The ^ anchor means "beginning of string".
     const result = await Expense.deleteMany({
+      userId: req.user.uid,
       date: { $regex: `^${month}` },
     });
     res.json({ message: `Deleted ${result.deletedCount} expense(s) for ${month}`, deletedCount: result.deletedCount });
@@ -282,11 +285,11 @@ router.patch('/:id', async (req, res) => {
       return res.status(400).json({ error: 'category is required' });
     }
 
-    // findByIdAndUpdate finds the document by its MongoDB _id and applies
-    // the update. { new: true } means return the updated document (not the old one).
-    // runValidators: true re-runs the schema validation on the new values.
-    const updated = await Expense.findByIdAndUpdate(
-      req.params.id,
+    // findOneAndUpdate scopes by both _id and userId so a user can only
+    // update their own expenses. { new: true } returns the updated document.
+    // runValidators: true re-runs schema validation on the new values.
+    const updated = await Expense.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.uid },
       { $set: { category } },
       { new: true, runValidators: true }
     );
@@ -326,8 +329,9 @@ router.patch('/:id', async (req, res) => {
 // ---------------------------------------------------------------------------
 router.delete('/:id', async (req, res) => {
   try {
-    // findByIdAndDelete finds by _id and removes it in one step.
-    const deleted = await Expense.findByIdAndDelete(req.params.id);
+    // findOneAndDelete scopes by both _id and userId so a user can only
+    // delete their own expenses.
+    const deleted = await Expense.findOneAndDelete({ _id: req.params.id, userId: req.user.uid });
     if (!deleted) {
       return res.status(404).json({ error: 'Expense not found' });
     }
