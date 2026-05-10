@@ -24,7 +24,24 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "https://www.simplebizbooks.app" }));
+const allowedOrigins = [
+  "https://www.simplebizbooks.app",
+  "https://simplebizbooks.app",
+  /https:\/\/.*\.vercel\.app$/,
+  "http://localhost:5173",
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOrigins.some(o =>
+      o instanceof RegExp ? o.test(origin) : o === origin
+    );
+    if (isAllowed) return callback(null, true);
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+}));
 
 app.use(express.json());
 
