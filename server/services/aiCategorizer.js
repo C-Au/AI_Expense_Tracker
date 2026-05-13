@@ -31,18 +31,23 @@ async function categorizeExpenses(
 
   const rulesMap = new Map(userRules.map((r) => [r.description, r.category]));
 
-  const uncachedIndices = [];
+  // Use a Set to ensure each unique description is sent to the AI only once.
+  // Without this, two expenses with the same description would both be added
+  // to uncachedDescriptions (the cache isn't populated until after the AI
+  // responds), causing the AI to receive duplicates and potentially collapse
+  // them in its response.
+  const uncachedKeys = new Set();
   const uncachedDescriptions = [];
 
-  expenses.forEach((exp, i) => {
+  expenses.forEach((exp) => {
     const key = exp.description.toLowerCase().trim();
 
     if (rulesMap.has(key)) {
       categoryCache.set(key, rulesMap.get(key));
     }
 
-    if (!categoryCache.has(key)) {
-      uncachedIndices.push(i);
+    if (!categoryCache.has(key) && !uncachedKeys.has(key)) {
+      uncachedKeys.add(key);
       uncachedDescriptions.push(exp.description);
     }
   });
