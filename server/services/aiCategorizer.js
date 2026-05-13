@@ -90,13 +90,16 @@ ${JSON.stringify(uncachedDescriptions)}`;
       throw new Error(`Failed to parse AI categories JSON: ${jsonMatch[0]}`);
     }
 
-    if (
-      !Array.isArray(categories) ||
-      categories.length !== uncachedDescriptions.length
-    ) {
+    if (!Array.isArray(categories)) {
       throw new Error(
-        `AI returned ${categories.length} categories for ${uncachedDescriptions.length} descriptions`,
+        `AI returned unexpected categories format: ${jsonMatch[0]}`,
       );
+    }
+
+    // The AI occasionally merges or drops items. Pad with "Other" so the
+    // upload never fails due to a count mismatch.
+    while (categories.length < uncachedDescriptions.length) {
+      categories.push("Other");
     }
 
     uncachedDescriptions.forEach((desc, i) => {
