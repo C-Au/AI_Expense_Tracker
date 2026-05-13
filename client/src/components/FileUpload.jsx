@@ -66,8 +66,8 @@ export default function FileUpload({
             : "Step #1: Drag & drop a CSV file here"}
         </p>
         <p className="dropzone-hint">
-          The uploaded CSV file must have these columns and in this order: date,
-          description, amount
+          CSV columns must be in this order: date, description, amount. A header
+          row is optional.
         </p>
       </div>
 
