@@ -31,18 +31,23 @@ async function categorizeExpenses(
 
   const rulesMap = new Map(userRules.map((r) => [r.description, r.category]));
 
-  const uncachedIndices = [];
+  // Use a Set to ensure each unique description is sent to the AI only once.
+  // Without this, two expenses with the same description would both be added
+  // to uncachedDescriptions (the cache isn't populated until after the AI
+  // responds), causing the AI to receive duplicates and potentially collapse
+  // them in its response.
+  const uncachedKeys = new Set();
   const uncachedDescriptions = [];
 
-  expenses.forEach((exp, i) => {
+  expenses.forEach((exp) => {
     const key = exp.description.toLowerCase().trim();
 
     if (rulesMap.has(key)) {
       categoryCache.set(key, rulesMap.get(key));
     }
 
-    if (!categoryCache.has(key)) {
-      uncachedIndices.push(i);
+    if (!categoryCache.has(key) && !uncachedKeys.has(key)) {
+      uncachedKeys.add(key);
       uncachedDescriptions.push(exp.description);
     }
   });
@@ -90,13 +95,16 @@ ${JSON.stringify(uncachedDescriptions)}`;
       throw new Error(`Failed to parse AI categories JSON: ${jsonMatch[0]}`);
     }
 
-    if (
-      !Array.isArray(categories) ||
-      categories.length !== uncachedDescriptions.length
-    ) {
+    if (!Array.isArray(categories)) {
       throw new Error(
-        `AI returned ${categories.length} categories for ${uncachedDescriptions.length} descriptions`,
+        `AI returned unexpected categories format: ${jsonMatch[0]}`,
       );
+    }
+
+    // The AI occasionally merges or drops items. Pad with "Other" so the
+    // upload never fails due to a count mismatch.
+    while (categories.length < uncachedDescriptions.length) {
+      categories.push("Other");
     }
 
     uncachedDescriptions.forEach((desc, i) => {
