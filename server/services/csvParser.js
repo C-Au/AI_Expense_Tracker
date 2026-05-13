@@ -22,7 +22,10 @@ function parseCSV(buffer) {
     trim: true,
   });
 
-  const expenses = records.map((row, index) => {
+  const expenses = [];
+
+  for (let index = 0; index < records.length; index++) {
+    const row = records[index];
     const normalized = Object.fromEntries(
       Object.entries(row).map(([k, v]) => [k.toLowerCase().trim(), v]),
     );
@@ -31,10 +34,15 @@ function parseCSV(buffer) {
     const description = normalized["description"];
     const rawAmount = normalized["amount"];
 
-    if (!date || !description || rawAmount === undefined) {
+    if (!date || !description) {
       throw new Error(
-        `Row ${index + 1} is missing required fields (date, description, amount). Got: ${JSON.stringify(normalized)}`,
+        `Row ${index + 1} is missing required fields (date, description). Got: ${JSON.stringify(normalized)}`,
       );
+    }
+
+    // Skip rows with a blank amount (e.g. bank payment credits, pending rows).
+    if (rawAmount === undefined || String(rawAmount).trim() === "") {
+      continue;
     }
 
     const amount = parseFloat(String(rawAmount).replace(/[^0-9.\-]/g, ""));
@@ -42,8 +50,8 @@ function parseCSV(buffer) {
       throw new Error(`Row ${index + 1} has an invalid amount: "${rawAmount}"`);
     }
 
-    return { date, description, amount };
-  });
+    expenses.push({ date, description, amount });
+  }
 
   return expenses;
 }
