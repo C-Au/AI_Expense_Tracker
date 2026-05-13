@@ -1,5 +1,7 @@
 # FileUpload.jsx Notes
 
+_Last updated: 2026-05-12_
+
 ## File Overview
 `client/src/components/FileUpload.jsx` — CSV drag-and-drop upload area plus the action toolbar (New Category, Delete Category, Export, etc.).
 
@@ -38,6 +40,9 @@ Sets up the drag-and-drop zone and returns:
 Configuration:
 - `accept: { 'text/csv': ['.csv'] }` — only allows CSV files.
 - `multiple: false` — only allows one file at a time.
+
+## Hint Text
+The dropzone hint now reads: "CSV columns must be in this order: date, description, amount. A header row is optional." — reflecting that bank-exported CSVs without a header row are accepted.
 
 ## `handleUpload`
 Called when the user clicks the "Upload & Categorize" button.

@@ -1,5 +1,7 @@
 # aiCategorizer.js Notes
 
+_Last updated: 2026-05-12_
+
 ## File Overview
 `server/services/aiCategorizer.js` — AI-powered expense categorization.
 
@@ -40,7 +42,9 @@ Converts the `userRules` array into a Map for O(1) lookup speed. Searching an ar
 For each expense:
 - Normalizes: lowercase + trim so `"Whole Foods"` and `"whole foods"` both match the same rule.
 - If the description matches a saved rule, puts it in the in-memory cache (so it won't be sent to the AI).
-- If not cached, adds it to `uncachedDescriptions` for the AI call.
+- If not already cached AND not already queued, adds it to `uncachedDescriptions` for the AI call.
+
+**Deduplication:** A `Set` (`uncachedKeys`) tracks which normalized descriptions have already been queued. Without this, two expenses with the same description string (e.g. two `KOZY HOUSTON NORTH` rows) would both be added to the batch before the cache is populated, causing the AI to receive duplicates and potentially return fewer items than sent. Each unique description is sent to the AI exactly once.
 
 ### Step 4: Call the AI (only if needed)
 Only called if there are descriptions not yet in the cache.
@@ -55,7 +59,7 @@ Only called if there are descriptions not yet in the cache.
 **Response parsing**:
 - The AI's reply is in `message.choices[0].message.content`.
 - The AI sometimes wraps JSON in markdown code fences (` ```json ... ``` `). The regex `\[[\s\S]*\]` finds the first `[...]` block and extracts it.
-- Sanity check: the AI should return exactly one category per description. Throws if the count doesn't match.
+- Count safety: the AI occasionally returns fewer categories than expected (e.g. if it merges similar descriptions). Instead of throwing, the response is padded with `'Other'` until its length matches the number of descriptions sent. This ensures the upload never fails due to a count mismatch.
 - If the AI returns an unrecognized category, falls back to `'Other'`.
 
 ### Step 5: Return results
