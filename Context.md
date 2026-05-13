@@ -44,7 +44,7 @@ server/ (Express API on port 5000)
 ---
 
 ## Coding Conventions
-- Every file starts with a block comment explaining what it is and why it exists
+- Every JSX file and JS file has their own markdown file in the notes folder.  If there are updates to a JSX file or JS file update the respective markdown file in the notes folder 
 - State is managed in `App.jsx`; child components receive data as props and call up via callbacks
 - Server routes are RESTful; all prefixed with `/api/expenses`
 - Secrets live in `.env` at the project root (never committed)
