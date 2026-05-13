@@ -1,8 +1,23 @@
 const { parse } = require("csv-parse/sync");
 
+// Returns true if the first line looks like a header row (contains the
+// expected column names). Allows files exported without headers to work.
+function hasHeaderRow(buffer) {
+  const firstLine = buffer.toString("utf8").split(/\r?\n/)[0].toLowerCase();
+  return (
+    firstLine.includes("date") &&
+    firstLine.includes("description") &&
+    firstLine.includes("amount")
+  );
+}
+
 function parseCSV(buffer) {
+  const withHeader = hasHeaderRow(buffer);
+
   const records = parse(buffer, {
-    columns: true,
+    // If no header row is present, assign column names positionally so the
+    // rest of the function can handle both formats identically.
+    columns: withHeader ? true : ["date", "description", "amount"],
     skip_empty_lines: true,
     trim: true,
   });
