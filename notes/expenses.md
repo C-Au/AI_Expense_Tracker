@@ -92,10 +92,12 @@ Changes the category of one expense AND saves a rule so the AI remembers this co
 - `{ new: true }` returns the updated document.
 - `runValidators: true` re-runs schema validation on the new values.
 - Returns `404` if no matching expense is found.
+- Calls `extractMerchantName(updated.description)` (imported from `aiCategorizer.js`) to strip transaction-specific noise before saving the rule. For example, `"CHICK-FIL-A #02826 HOUSTON, TX 11.25 USD @ 1.408888"` becomes `"CHICK-FIL-A"`. This means the saved rule will match future transactions from the same merchant even if the store number, city, or amount differs.
 - Saves a correction as an AI rule using `findOneAndUpdate` with `{ upsert: true }`:
-  - If a rule already exists for this user + description → update it.
+  - If a rule already exists for this user + extracted merchant name → update it.
   - If no rule exists yet → create a new one.
   - Prevents duplicate rules from building up.
+- Both `description` (normalized/lowercased merchant name) and `originalDescription` (original-casing merchant name) use the extracted value, so the AI Memory modal displays the clean merchant name instead of the raw transaction string.
 
 ---
 
@@ -118,6 +120,11 @@ Removes one AI rule. Scoped by both `_id` AND `userId` so users can't delete eac
 Returns all user-created categories sorted alphabetically. `sort({ name: 1 })` sorts ascending.
 
 ---
+
+## Changelog
+
+### 2026-05-30
+- **`PATCH /api/expenses/:id`** — now calls `extractMerchantName()` (imported from `aiCategorizer.js`) before saving the AI rule. The rule key and display name are now the extracted merchant name (e.g. `"CHICK-FIL-A"`) rather than the full transaction description. This makes rules re-usable across different visits to the same merchant.
 
 ## `POST /api/expenses/custom-categories`
 Creates a new custom category with a name and color. Creates a new Mongoose document instance and saves it. MongoDB error code `11000` means a duplicate key (unique constraint violated) — happens if the user tries to create a category that already exists.
