@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
+function extractMerchantName(description) {
+  let name = description.trim();
+  const hashIdx = name.indexOf('#');
+  if (hashIdx > 0) name = name.slice(0, hashIdx).trim();
+  const starIdx = name.indexOf('*');
+  if (starIdx > 0) name = name.slice(0, starIdx).trim();
+  return name || description.trim();
+}
+
 export default function CategoryRulesModal({ isOpen, onClose, onRuleDeleted }) {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -87,7 +96,7 @@ export default function CategoryRulesModal({ isOpen, onClose, onRuleDeleted }) {
                 {rules.map((rule) => (
                   <tr key={rule._id}>
                     <td className="rules-td-description">
-                      {rule.originalDescription}
+                      {extractMerchantName(rule.originalDescription)}
                     </td>
                     <td>
                       <span className="rules-category-badge">
@@ -99,7 +108,7 @@ export default function CategoryRulesModal({ isOpen, onClose, onRuleDeleted }) {
                         className="delete-btn"
                         onClick={() => handleDelete(rule._id)}
                         disabled={deletingId === rule._id} // Disable while this rule is deleting.
-                        aria-label={`Delete rule for ${rule.originalDescription}`}
+                        aria-label={`Delete rule for ${extractMerchantName(rule.originalDescription)}`}
                       >
                         {deletingId === rule._id ? "…" : "Remove"}
                       </button>
