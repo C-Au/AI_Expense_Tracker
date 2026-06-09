@@ -20,6 +20,15 @@ const VALID_CATEGORIES = [
 
 const categoryCache = new Map();
 
+function extractMerchantName(description) {
+  let name = description.trim();
+  const hashIdx = name.indexOf('#');
+  if (hashIdx > 0) name = name.slice(0, hashIdx).trim();
+  const starIdx = name.indexOf('*');
+  if (starIdx > 0) name = name.slice(0, starIdx).trim();
+  return name || description.trim();
+}
+
 async function categorizeExpenses(
   expenses,
   userRules = [],
@@ -31,19 +40,16 @@ async function categorizeExpenses(
 
   const rulesMap = new Map(userRules.map((r) => [r.description, r.category]));
 
-  // Use a Set to ensure each unique description is sent to the AI only once.
-  // Without this, two expenses with the same description would both be added
-  // to uncachedDescriptions (the cache isn't populated until after the AI
-  // responds), causing the AI to receive duplicates and potentially collapse
-  // them in its response.
   const uncachedKeys = new Set();
   const uncachedDescriptions = [];
 
   expenses.forEach((exp) => {
     const key = exp.description.toLowerCase().trim();
+    const merchantKey = extractMerchantName(exp.description).toLowerCase().trim();
 
-    if (rulesMap.has(key)) {
-      categoryCache.set(key, rulesMap.get(key));
+    const matchedCategory = rulesMap.get(merchantKey) ?? rulesMap.get(key);
+    if (matchedCategory !== undefined) {
+      categoryCache.set(key, matchedCategory);
     }
 
     if (!categoryCache.has(key) && !uncachedKeys.has(key)) {
@@ -101,8 +107,6 @@ ${JSON.stringify(uncachedDescriptions)}`;
       );
     }
 
-    // The AI occasionally merges or drops items. Pad with "Other" so the
-    // upload never fails due to a count mismatch.
     while (categories.length < uncachedDescriptions.length) {
       categories.push("Other");
     }
@@ -122,4 +126,4 @@ ${JSON.stringify(uncachedDescriptions)}`;
   }));
 }
 
-module.exports = { categorizeExpenses };
+module.exports = { categorizeExpenses, extractMerchantName };

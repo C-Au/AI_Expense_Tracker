@@ -13,6 +13,7 @@ import DeleteByMonthModal from "./components/DeleteByMonthModal";
 import LoginPage from "./components/LoginPage";
 import CategoryRulesModal from "./components/CategoryRulesModal";
 import PaywallModal from "./components/PaywallModal";
+import MonthFilter from "./components/MonthFilter";
 
 import { auth, onAuthStateChanged, signOutUser } from "./firebase";
 
@@ -38,6 +39,8 @@ export default function App() {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
 
+  const [selectedMonth, setSelectedMonth] = useState("All");
+
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState(null);
@@ -49,6 +52,8 @@ export default function App() {
   );
 
   const [batches, setBatches] = useState([]);
+
+  const [availableMonths, setAvailableMonths] = useState([]);
 
   const [customCategories, setCustomCategories] = useState([]);
 
@@ -112,9 +117,11 @@ export default function App() {
     }
   }, []);
 
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = useCallback(async (month) => {
     try {
-      const res = await axios.get("/api/expenses/categories");
+      const params = {};
+      if (month && month !== "All") params.month = month;
+      const res = await axios.get("/api/expenses/categories", { params });
       setCategoryTotals(res.data);
     } catch (err) {
       console.error("Failed to fetch category totals:", err);
@@ -127,6 +134,15 @@ export default function App() {
       setBatches(res.data);
     } catch (err) {
       console.error("Failed to fetch upload batches:", err);
+    }
+  }, []);
+
+  const fetchMonths = useCallback(async () => {
+    try {
+      const res = await axios.get("/api/expenses/months");
+      setAvailableMonths(res.data.map((m) => m.month));
+    } catch (err) {
+      console.error("Failed to fetch months:", err);
     }
   }, []);
 
@@ -155,13 +171,18 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
-    fetchCategories();
-  }, [user, expenses, fetchCategories]);
+    fetchCategories(selectedMonth);
+  }, [user, expenses, selectedMonth, fetchCategories]);
 
   useEffect(() => {
     if (!user) return;
     fetchBatches();
   }, [user, fetchBatches]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchMonths();
+  }, [user, fetchMonths]);
 
   useEffect(() => {
     if (!user) return;
@@ -175,8 +196,9 @@ export default function App() {
 
   const handleUploadSuccess = (newExpenses) => {
     setExpenses((prev) => [...newExpenses, ...prev]);
-    fetchCategories();
+    fetchCategories(selectedMonth);
     fetchBatches();
+    fetchMonths();
     setError(null);
     setCsvParseError(false);
   };
@@ -193,7 +215,7 @@ export default function App() {
       });
 
       setExpenses((prev) => prev.map((e) => (e._id === id ? res.data : e)));
-      fetchCategories();
+      fetchCategories(selectedMonth);
       fetchRules();
     } catch (err) {
       setError(err.response?.data?.error || err.message);
@@ -205,10 +227,16 @@ export default function App() {
       await axios.delete(`/api/expenses/${id}`);
 
       setExpenses((prev) => prev.filter((e) => e._id !== id));
-      fetchCategories();
+      fetchCategories(selectedMonth);
+      fetchMonths();
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     }
+  };
+
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    setSelectedCategory("All");
   };
 
   const handleCategoryClick = (category) => {
@@ -219,10 +247,15 @@ export default function App() {
 
   const categories = ["All", ...categoryTotals.map((c) => c.category)];
 
+  const monthFiltered =
+    selectedMonth === "All"
+      ? expenses
+      : expenses.filter((e) => e.date?.startsWith(selectedMonth));
+
   const filteredExpenses =
     selectedCategory === "All"
-      ? expenses
-      : expenses.filter((e) => e.category === selectedCategory);
+      ? monthFiltered
+      : monthFiltered.filter((e) => e.category === selectedCategory);
 
   const handleExport = async () => {
     const rows = filteredExpenses;
@@ -412,6 +445,16 @@ export default function App() {
               categoryColors={categoryColors}
             />
           </div>
+
+          {availableMonths.length > 1 && (
+            <div className="full-width">
+              <MonthFilter
+                months={availableMonths}
+                selected={selectedMonth}
+                onChange={handleMonthChange}
+              />
+            </div>
+          )}
 
           <CategoryChart
             data={categoryTotals}

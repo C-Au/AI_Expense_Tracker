@@ -1,5 +1,7 @@
 # App.jsx Notes
 
+_Last updated: 2026-05-12_
+
 ## File Overview
 `client/src/App.jsx` — The root component of the React front-end.
 
@@ -75,3 +77,5 @@ Called by child components via callback props.
 - `handleUploadSuccess(newExpenses)` — Prepends the new expenses to the front of the list so they appear immediately. Also refreshes categories, batches, and clears errors.
 - `handleUploadError(message, isCsvError)` — Called by FileUpload when an upload fails.
 - `handleCategoryChange(id, newCategory)` — Sends a PATCH request and updates local state optimistically. Uses `.map()` to replace the updated expense in the array. Re-syncs rules since a new rule was just created server-side.
+- `handleDelete(id)` — Sends a DELETE request and removes the expense from local state using `.filter()`. Re-fetches category totals so the pie chart stays accurate.
+- `handleExport()` — Exports the currently filtered expenses as a CSV file. Groups expenses by category alphabetically, appends a per-category subtotal on the last row of each group, and includes a grand total in the header row. Uses the File System Access API (`showSaveFilePicker`) if available for a native save dialog; falls back to a temporary anchor link download on unsupported browsers. Handles edge cases: file open in another app (`NoModificationAllowedError`), user cancelling the dialog (`AbortError`).

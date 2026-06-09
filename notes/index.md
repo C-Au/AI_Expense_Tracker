@@ -1,5 +1,7 @@
 # index.js (server) Notes
 
+_Last updated: 2026-05-12_
+
 ## File Overview
 `server/index.js` — The entry point for the back-end (Node.js) server.
 
@@ -21,7 +23,14 @@ Gives the server the ability to verify Firebase ID tokens. Credentials come from
 ## Global Middleware
 Middleware = functions that run on EVERY incoming request before your route handlers run. Think of them as checkpoints.
 
-- `cors({ origin: 'https://www.simplebizbooks.app' })` — allows requests from the production front-end.
+- **CORS** — uses a function-based origin check instead of a single string. Allowed origins:
+  - `https://www.simplebizbooks.app` (production)
+  - `https://simplebizbooks.app` (production without www)
+  - Any `https://*.vercel.app` URL (tested via regex — covers Vercel preview deployments)
+  - `http://localhost:5173` (local dev)
+  - Requests with no `Origin` header (e.g. server-to-server calls) are allowed through.
+  - `credentials: true` is required because the front-end sends `Authorization` headers.
+- **COOP header** — sets `Cross-Origin-Opener-Policy: same-origin-allow-popups` on every response. Required for Google sign-in popups to work correctly in the browser after a cross-origin navigation.
 - `express.json()` — automatically parses JSON request bodies. Without this, `req.body` would be `undefined` when the client sends JSON.
 
 ## Routes

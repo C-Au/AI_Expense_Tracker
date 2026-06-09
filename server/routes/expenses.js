@@ -9,7 +9,7 @@ const CustomCategory = require("../models/CustomCategory");
 const CategoryRule = require("../models/CategoryRule");
 
 const { parseCSV } = require("../services/csvParser");
-const { categorizeExpenses } = require("../services/aiCategorizer");
+const { categorizeExpenses, extractMerchantName } = require("../services/aiCategorizer");
 
 const router = express.Router();
 
@@ -103,11 +103,16 @@ router.get("/", async (req, res) => {
 
 router.get("/categories", async (req, res) => {
   try {
-    const { batch } = req.query;
+    const { batch, month } = req.query;
+
+    if (month && !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: "Invalid month format. Use YYYY-MM." });
+    }
 
     const match = {
       userId: req.user.uid,
       ...(batch ? { uploadBatch: batch } : {}),
+      ...(month ? { date: { $regex: `^${month}` } } : {}),
     };
 
     const summary = await Expense.aggregate([
@@ -223,14 +228,15 @@ router.patch("/:id", async (req, res) => {
       return res.status(404).json({ error: "Expense not found" });
     }
 
-    const normalizedDesc = updated.description.toLowerCase().trim();
+    const extractedName = extractMerchantName(updated.description);
+    const normalizedDesc = extractedName.toLowerCase().trim();
 
     await CategoryRule.findOneAndUpdate(
       { userId: req.user.uid, description: normalizedDesc },
       {
         userId: req.user.uid,
         description: normalizedDesc,
-        originalDescription: updated.description,
+        originalDescription: extractedName,
         category,
       },
       { upsert: true, new: true, setDefaultsOnInsert: true },

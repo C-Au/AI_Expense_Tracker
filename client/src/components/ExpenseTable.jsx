@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { getAllCategoryColors } from "../utils/categoryColors";
 
+function extractMerchantName(description) {
+  let name = description.trim();
+  const hashIdx = name.indexOf('#');
+  if (hashIdx > 0) name = name.slice(0, hashIdx).trim();
+  const starIdx = name.indexOf('*');
+  if (starIdx > 0) name = name.slice(0, starIdx).trim();
+  return name || description.trim();
+}
+
 export default function ExpenseTable({
   expenses,
   onDelete,
@@ -99,9 +108,11 @@ export default function ExpenseTable({
                     ))}
                   </select>
 
-                  {ruleDescriptions.has(
+                  {(ruleDescriptions.has(
+                    extractMerchantName(exp.description).toLowerCase().trim(),
+                  ) || ruleDescriptions.has(
                     exp.description.toLowerCase().trim(),
-                  ) && (
+                  )) && (
                     <span
                       className="rule-indicator"
                       title="AI will remember this category"
