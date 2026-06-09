@@ -103,11 +103,16 @@ router.get("/", async (req, res) => {
 
 router.get("/categories", async (req, res) => {
   try {
-    const { batch } = req.query;
+    const { batch, month } = req.query;
+
+    if (month && !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: "Invalid month format. Use YYYY-MM." });
+    }
 
     const match = {
       userId: req.user.uid,
       ...(batch ? { uploadBatch: batch } : {}),
+      ...(month ? { date: { $regex: `^${month}` } } : {}),
     };
 
     const summary = await Expense.aggregate([
